@@ -1,0 +1,8 @@
+## Interface: 30300
+## Title: |cff00ff00Lizard|r|cffFFFFFFTMO|r |cffAAAAAA(Too Many Outfits)|r
+## Notes: Store and preview Synastria transmog outfits
+## Author: Lizard
+## Version: 0.1
+## SavedVariables: LizardTMO_Saved, LizardTMO_MinimapPos
+
+LizardTMO.lua
