@@ -12,10 +12,21 @@ LizardTMO.frame = CreateFrame("Frame", "LizardTMOFrame", UIParent)
 LizardTMO.frame:RegisterEvent("ADDON_LOADED")
 LizardTMO.frame:SetScript("OnEvent", function(self, event, addon)
     if addon == "LizardTMO" then
+
         if not LizardTMO_Saved then
             LizardTMO_Saved = { outfits = {} }
         end
+
+        if not LizardTMO_MinimapPos then
+            LizardTMO_MinimapPos = 0
+        end
+
         LizardTMO:CreateUI()
+
+        -- Apply saved minimap position AFTER variables load
+        if LizardTMO.UpdateMinimapPosition then
+            LizardTMO.UpdateMinimapPosition()
+        end
     end
 end)
 
@@ -73,23 +84,15 @@ function LizardTMO:CreateUI()
     local close = CreateFrame("Button", nil, f, "UIPanelCloseButton")
     close:SetPoint("TOPRIGHT", -5, -5)
 
-    -- =========================
-    -- Name Input (REFERENCE)
-    -- =========================
-
+    -- Name Input
     local nameBox = CreateFrame("EditBox", nil, f, "InputBoxTemplate")
     nameBox:SetPoint("TOPLEFT", f, "TOPLEFT", 20, -40)
     nameBox:SetSize(140, 20)
     nameBox:SetAutoFocus(false)
     nameBox:SetText("Name")
 
-    -- =========================
-    -- Code Input (MANUAL ALIGN FIX)
-    -- =========================
-
+    -- Code Input (your custom styled one)
     local codeFrame = CreateFrame("Frame", nil, f)
-
-    -- 🔥 SHIFT LEFT slightly to match visual start of nameBox text
     codeFrame:SetPoint("TOPLEFT", nameBox, "BOTTOMLEFT", -2, -10)
     codeFrame:SetSize(nameBox:GetWidth() + 2, nameBox:GetHeight())
 
@@ -108,7 +111,6 @@ function LizardTMO:CreateUI()
     codeBox:SetFontObject(nameBox:GetFontObject())
     codeBox:SetAutoFocus(false)
 
-    -- Placeholder
     codeBox:SetText("Paste code here")
     codeBox.isPlaceholder = true
 
@@ -132,10 +134,7 @@ function LizardTMO:CreateUI()
         end
     end)
 
-    -- =========================
     -- Add Button
-    -- =========================
-
     local addBtn = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
     addBtn:SetSize(80, 22)
     addBtn:SetPoint("TOPLEFT", nameBox, "BOTTOMLEFT", 0, -35)
@@ -157,10 +156,7 @@ function LizardTMO:CreateUI()
         end
     end)
 
-    -- =========================
     -- Scroll Frame
-    -- =========================
-
     local scrollFrame = CreateFrame("ScrollFrame", "LizardTMOScroll", f, "UIPanelScrollFrameTemplate")
     scrollFrame:SetSize(300, 240)
     scrollFrame:SetPoint("TOPLEFT", f, "TOPLEFT", 20, -140)
@@ -275,7 +271,7 @@ SlashCmdList["LIZARDTMO"] = function()
 end
 
 -- =========================
--- Minimap Button (CIRCULAR)
+-- Minimap Button
 -- =========================
 
 local minimapButton = CreateFrame("Button", "LizardTMO_MinimapButton", Minimap)
@@ -286,39 +282,29 @@ minimapButton:SetMovable(true)
 minimapButton:EnableMouse(true)
 minimapButton:RegisterForDrag("LeftButton")
 
--- Background (circular mask style)
 local bg = minimapButton:CreateTexture(nil, "BACKGROUND")
 bg:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")
 bg:SetSize(54, 54)
 bg:SetPoint("TOPLEFT")
 
--- Icon (masked into circle)
 local icon = minimapButton:CreateTexture(nil, "ARTWORK")
 icon:SetTexture("Interface\\Icons\\INV_Shirt_06")
 icon:SetSize(20, 20)
 icon:SetPoint("CENTER", 0, 0)
 
--- Border overlay (true circular look)
 local border = minimapButton:CreateTexture(nil, "OVERLAY")
 border:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")
 border:SetSize(54, 54)
 border:SetPoint("TOPLEFT")
 
--- Saved position
-if not LizardTMO_MinimapPos then
-    LizardTMO_MinimapPos = 0
-end
-
-local function UpdateMinimapPosition()
-    local angle = math.rad(LizardTMO_MinimapPos)
+function LizardTMO.UpdateMinimapPosition()
+    local angle = math.rad(LizardTMO_MinimapPos or 0)
     local x = math.cos(angle) * 80
     local y = math.sin(angle) * 80
     minimapButton:SetPoint("CENTER", Minimap, "CENTER", x, y)
 end
 
-UpdateMinimapPosition()
-
--- Drag logic
+-- Drag
 minimapButton:SetScript("OnDragStart", function(self)
     self:SetScript("OnUpdate", function()
         local mx, my = Minimap:GetCenter()
@@ -331,7 +317,7 @@ minimapButton:SetScript("OnDragStart", function(self)
         local angle = math.deg(math.atan2(py - my, px - mx))
         LizardTMO_MinimapPos = angle
 
-        UpdateMinimapPosition()
+        LizardTMO.UpdateMinimapPosition()
     end)
 end)
 
@@ -340,13 +326,11 @@ minimapButton:SetScript("OnDragStop", function(self)
 end)
 
 -- Click
-minimapButton:SetScript("OnClick", function(self, button)
-    if button == "LeftButton" then
-        if LizardTMO.frame:IsShown() then
-            LizardTMO.frame:Hide()
-        else
-            LizardTMO.frame:Show()
-        end
+minimapButton:SetScript("OnClick", function(self)
+    if LizardTMO.frame:IsShown() then
+        LizardTMO.frame:Hide()
+    else
+        LizardTMO.frame:Show()
     end
 end)
 
